@@ -1,8 +1,3 @@
-export default function Dashboard() {
-  return (
-    <div>
-      <h1>Owner Dashboard</h1>
-      <p>Welcome to portal!</p>
-    </div>
-  )
+export default function Home() {
+  return <h1>Hello, this is my rental portal!</h1>
 }
