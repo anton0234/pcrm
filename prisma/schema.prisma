@@ -7,10 +7,39 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model Client {
+  id         Int        @id @default(autoincrement())
+  name       String
+  email      String     @unique
+  properties Property[]
+}
+
 model Property {
-  id        Int      @id @default(autoincrement())
-  name      String
-  location  String
-  price     Float
-  createdAt DateTime @default(now())
+  id         Int        @id @default(autoincrement())
+  name       String
+  location   String
+  price      Float
+  createdAt  DateTime   @default(now())
+  clientId   Int
+  client     Client     @relation(fields: [clientId], references: [id])
+  bookings   Booking[]
+  revenues   Revenue[]
+}
+
+model Booking {
+  id         Int        @id @default(autoincrement())
+  propertyId Int
+  platform   String
+  guestName  String
+  startDate  DateTime
+  endDate    DateTime
+  property   Property   @relation(fields: [propertyId], references: [id])
+}
+
+model Revenue {
+  id         Int        @id @default(autoincrement())
+  propertyId Int
+  month      DateTime
+  amount     Float
+  property   Property   @relation(fields: [propertyId], references: [id])
 }
