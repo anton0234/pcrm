@@ -3,17 +3,24 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
+type Property = {
+  id: number;
+  name: string;
+  location: string;
+  price: number;
+  createdAt: string;
+};
+
 export default function OwnerDashboard() {
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchProperties = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError('');
 
-      // 1) Get the logged-in user
       const {
         data: { user },
         error: userError,
@@ -25,7 +32,6 @@ export default function OwnerDashboard() {
         return;
       }
 
-      // 2) Get the Client row linked to this user
       const { data: client, error: clientError } = await supabase
         .from('Client')
         .select('id')
@@ -38,7 +44,6 @@ export default function OwnerDashboard() {
         return;
       }
 
-      // 3) Fetch properties owned by this client
       const { data: props, error: propError } = await supabase
         .from('Property')
         .select('*')
@@ -54,7 +59,7 @@ export default function OwnerDashboard() {
       setLoading(false);
     };
 
-    fetchProperties();
+    fetchData();
   }, []);
 
   return (
@@ -70,11 +75,12 @@ export default function OwnerDashboard() {
 
       {!loading && !error && properties.length > 0 && (
         <ul className="space-y-4">
-          {properties.map((property: any) => (
+          {properties.map((property) => (
             <li key={property.id} className="border p-4 rounded shadow">
               <h2 className="text-lg font-semibold">{property.name}</h2>
-              <p>{property.address}</p>
-              <p>Status: {property.status}</p>
+              <p>Location: {property.location}</p>
+              <p>Price: €{property.price}</p>
+              <p>Created: {new Date(property.createdAt).toLocaleDateString()}</p>
             </li>
           ))}
         </ul>
