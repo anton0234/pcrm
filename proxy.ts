@@ -29,8 +29,9 @@ export default function proxy(req: NextRequest) {
   }
 
   if (url.pathname.startsWith('/owner')) {
-    if (roleCookie !== 'owner') {
-      url.pathname = '/admin/dashboard';
+    // ✅ FIXED: allow both owner and admin to access owner routes
+    if (roleCookie !== 'owner' && roleCookie !== 'admin') {
+      url.pathname = '/login';
       return NextResponse.redirect(url);
     }
   }
