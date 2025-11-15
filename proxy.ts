@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(req: NextRequest) {
+export default function proxy(req: NextRequest) {
   const url = req.nextUrl.clone();
 
-  // Supabase session cookies (presence means logged in)
+  // Supabase session cookies
   const accessToken = req.cookies.get('sb-access-token');
   const refreshToken = req.cookies.get('sb-refresh-token');
 
@@ -37,7 +37,3 @@ export function middleware(req: NextRequest) {
 
   return NextResponse.next();
 }
-
-export const config = {
-  matcher: ['/admin/:path*', '/owner/:path*'],
-};
