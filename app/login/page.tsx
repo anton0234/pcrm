@@ -11,46 +11,46 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-  try {
-    // 1) Log in
-    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-    if (loginError) throw new Error(loginError.message);
+    try {
+      // 1) Log in
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      if (loginError) throw new Error(loginError.message);
 
-    // 2) Get the user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      // 2) Get the user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) throw new Error('User not found');
+      if (!user) throw new Error('User not found');
 
-    // 3) Fetch role from Client table
-    const { data: client, error: roleError } = await supabase
-      .from('Client')
-      .select('role')
-      .eq('auth_user_id', user.id)
-      .single();
+      // 3) Fetch role from Client table
+      const { data: client, error: roleError } = await supabase
+        .from('Client')
+        .select('role')
+        .eq('auth_user_id', user.id)
+        .single();
 
-    if (roleError || !client?.role) throw new Error('Role not found or user not linked');
+      if (roleError || !client?.role) throw new Error('Role not found or user not linked');
 
-    // 4) Set role cookie
-    document.cookie = `role=${client.role}; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
+      // 4) Set role cookie
+      document.cookie = `role=${client.role}; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
 
-    // 5) Redirect
-    if (client.role === 'admin') {
-      router.push('/admin/dashboard');
-    } else {
-      router.push('/owner/dashboard');
+      // 5) Redirect
+      if (client.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/owner/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+      setLoading(false);
     }
-  } catch (err: any) {
-    setError(err.message || 'Login failed');
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
