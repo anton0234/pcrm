@@ -16,11 +16,45 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setError(error.message);
+    // 1) Log in
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+    if (loginError) {
+      setError(loginError.message);
       setLoading(false);
+      return;
+    }
+
+    // 2) Get the user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setError('User not found');
+      setLoading(false);
+      return;
+    }
+
+    // 3) Fetch role from Client table
+    const { data: client, error: roleError } = await supabase
+      .from('Client')
+      .select('role')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (roleError || !client?.role) {
+      setError('Role not found or user not linked');
+      setLoading(false);
+      return;
+    }
+
+    // 4) Set a role cookie (read by middleware)
+    // Max-Age: 7 days; Path=/ to apply to all routes.
+    document.cookie = `role=${client.role}; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
+
+    // 5) Redirect based on role
+    if (client.role === 'admin') {
+      router.push('/admin/dashboard');
     } else {
       router.push('/owner/dashboard');
     }
