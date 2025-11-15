@@ -12,45 +12,51 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      // 1) Log in
-      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-      if (loginError) throw new Error(loginError.message);
+  try {
+    console.log('🔐 Starting login...');
 
-      // 2) Get the user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+    if (loginError) throw new Error(loginError.message);
+    console.log('✅ Logged in via Supabase Auth');
 
-      if (!user) throw new Error('User not found');
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      // 3) Fetch role from Client table
-      const { data: client, error: roleError } = await supabase
-        .from('Client')
-        .select('role')
-        .eq('auth_user_id', user.id)
-        .single();
+    if (!user) throw new Error('User not found');
+    console.log('👤 Supabase user ID:', user.id);
 
-      if (roleError || !client?.role) throw new Error('Role not found or user not linked');
+    const { data: client, error: roleError } = await supabase
+      .from('Client')
+      .select('role')
+      .eq('auth_user_id', user.id)
+      .single();
 
-      // 4) Set role cookie
-      document.cookie = `role=${client.role}; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
+    console.log('📦 Client query result:', client);
+    if (roleError) console.error('❌ Role query error:', roleError);
 
-      // 5) Redirect
-      if (client.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/owner/dashboard');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-      setLoading(false);
+    if (!client?.role) throw new Error('Role not found or user not linked');
+
+    document.cookie = `role=${client.role}; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
+    console.log('🍪 Role cookie set:', client.role);
+
+    if (client.role === 'admin') {
+      console.log('➡️ Redirecting to /admin/dashboard');
+      router.push('/admin/dashboard');
+    } else {
+      console.log('➡️ Redirecting to /owner/dashboard');
+      router.push('/owner/dashboard');
     }
-  };
+  } catch (err: any) {
+    console.error('⚠️ Login error:', err.message);
+    setError(err.message || 'Login failed');
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
