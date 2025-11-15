@@ -25,13 +25,30 @@ export default function DashboardPage() {
         return;
       }
 
-      const { data, error } = await supabase
+      // Step 1: Find the Client record linked to this user
+      const { data: client, error: clientError } = await supabase
+        .from('Client')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (clientError || !client) {
+        console.error('Client not found:', clientError?.message);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Fetch properties for this client
+      const { data: props, error: propError } = await supabase
         .from('Property')
         .select('*')
-        .eq('clientId', user.id); // Adjust if you're using a different ID system
+        .eq('clientId', client.id);
 
-      if (error) console.error(error);
-      else setProperties(data || []);
+      if (propError) {
+        console.error('Error fetching properties:', propError.message);
+      } else {
+        setProperties(props || []);
+      }
 
       setLoading(false);
     };
@@ -42,11 +59,11 @@ export default function DashboardPage() {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div>
-      <h1>Your Properties</h1>
-      <ul>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Your Properties</h1>
+      <ul className="space-y-2">
         {properties.map((property) => (
-          <li key={property.id}>
+          <li key={property.id} className="border p-3 rounded">
             <strong>{property.name}</strong> — {property.location} — €{property.price}
           </li>
         ))}
